@@ -22,20 +22,42 @@ interface KittyInterface {
 }
 
 contract ZombieFeeding is ZombieFactory {
-  address public ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
-  KittyInterface public kittyInterface = KittyInterface(ckAddress);
+  KittyInterface public kittyInterface;
 
+  /**
+   * @dev Sets the address of the CryptoKitties smart contract.
+   * @param _address The new address to be set.
+   */
+  function setKittyContractAddress(address _address) external onlyOwner {
+    kittyInterface = KittyInterface(_address);
+  }
+
+  function _triggerCooldown(Zombie storage _zombie) internal {
+    _zombie.readyTime = uint32(block.timestamp + cooldownTime);
+  }
+
+  function _isReady(Zombie storage _zombie) internal view returns (bool) {
+    return _zombie.readyTime <= block.timestamp;
+  }
+
+  /**
+   * @dev Allows a zombie to feed on a lifeform and multiply.
+   * @param _zombieId The ID of the zombie to feed.
+   * @param _targetDna The DNA of the target.
+   * @param _species The species of the target.
+   */
   function feedAndMultiply(
     uint256 _zombieId,
     uint256 _targetDna,
     string memory _species
-  ) public {
+  ) internal {
     require(
       zombieToOwner[_zombieId] == msg.sender,
       "You don't own this zombie"
     );
-
     Zombie storage myZombie = zombies[_zombieId];
+    require(_isReady(myZombie), "Zombie is not ready");
+
     _targetDna = _targetDna % dnaModulus;
     uint256 newDna = (myZombie.dna + _targetDna) / 2;
 
@@ -44,8 +66,12 @@ contract ZombieFeeding is ZombieFactory {
     }
 
     _createZombie("NoName", newDna);
+    _triggerCooldown(myZombie);
   }
 
+  /**
+   * @dev Allows a zombie to feed on a CryptoKitty.
+   */
   function feedOnKitty(uint256 _zombieId, uint256 _kittyId) public {
     uint256 kittyDna;
 
