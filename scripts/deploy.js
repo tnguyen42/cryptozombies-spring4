@@ -14,12 +14,12 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const ZombieFactory = await hre.ethers.getContractFactory("ZombieFactory");
-  const zombieFactory = await ZombieFactory.deploy("Hello, Hardhat!");
+  const ZombieHelper = await hre.ethers.getContractFactory("ZombieHelper");
+  const zombieHelper = await ZombieHelper.deploy("Hello, Hardhat!");
 
-  await zombieFactory.deployed();
+  await zombieHelper.deployed();
 
-  console.log("ZombieFactory deployed to:", zombieFactory.address);
+  console.log("ZombieHelper deployed to:", zombieHelper.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
